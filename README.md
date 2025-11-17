@@ -175,6 +175,10 @@ The predicted velocities are in agreement with the calculations done before. How
 
 ![Tmelt_1](https://github.com/user-attachments/assets/1003d0a8-b64e-4805-86d7-ab326c9f4cf5)
 
+The final results will still take some time, at least one more week. 
+
+emefffægmx.at
+
 
 
 
