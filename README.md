@@ -76,6 +76,8 @@ I don't want to leave the drawbacks of this solver unmentioned:
 
 ## Thixomolding simulation of a dummy part
 
+This part is just a flat plate with automatically generated runners, overflows and vents similar to the geometry presented in this repo: 
+
 
 
 
