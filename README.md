@@ -53,7 +53,7 @@ I don't want to leave the drawbacks of this solver unmentioned:
 
 -) it can be highly unstable, only first order ddtSchemes work. I will say this: using commercial packages we do not even know the accuracy of the used time schemes, we are not given this information!
 
--) it has only worked reliably with simple meshes (castellated) out of snappyHexMesh, but hey, the commercial packages also have this problem?!? What do I mean by 'reliably': a 'fire and forget' type of simulation, that does not need my human interference. It is launched, together with necessary DIY control scripts, and it runs until the end. 
+-) it has only worked reliably with simple meshes (castellated) out of snappyHexMesh, but hey, the commercial packages also have this problem?!? What do I mean by 'reliably': a 'fire and forget' type of simulation, that does not need my human interference. It is launched together with necessary DIY control scripts, and it runs until the end. 
 
 -) the meshes in the fluid have to be very uniform, only one cell size allowed
 
@@ -64,6 +64,8 @@ I don't want to leave the drawbacks of this solver unmentioned:
 -) maxCo is ramped up via bash script (which you should always do, anyway) 
 
 -) so far only laminar turbulenceProperties possible, also due to mesh geometry and structure. Astonishingly, this is fulfilled very often in Thixomolding. 
+
+-) using snappyHexMesh we are limited in the cell size of the (less important solid) which causes unnecessarily high cell count in solid (however, not the main driver of computation time). 
 
 -) simulation computationally expensive compared to FD, my estimation is with the same core count we need 8-10 times more computation time with VOF (~same mesh size in fluid). In 2025 this is not really an issue because there are workstations with 32+, 64+ and even more cores available. Anyway, with the commercial licenses (and FD!) in a small company you would have 4 or 8-core licenses and a tailored CPU (6, 8 or 12 core for the mentioned licenses, because you'd need slightly more than the 4 or 8 cores for post-processing additionally) to keep CPU frequency high. And that means on this very machine you could not do any other stuff, it would be packed with tasks. Thus, if you arrive at a workstation with 36+ cores for 32 cores in OpenFOAM, your 8-10 fold advantage on commercial FD casting simulation licenses is already gone through the window because the increase with 32 (OpenFOAM) over 4 (commercial casting package) is nearly 8 fold. Granted this workstation will be a bit more expensive, but not 20000-50000€ per year, the price of a commercial license casting package. For these expenses, you could easily buy a multi CPU server with hundreds of GB of RAM (don't forget 10 or 25GbE!), or two if refurbished. But, also here, choose your CPUs wisely and leave some spare cores for post-processing (you probably don't want to shove around hundreds of GBs or TBs of data to your your workstations, so you would do PP also on the server). 
 
