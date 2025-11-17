@@ -74,7 +74,7 @@ I don't want to leave the drawbacks of this solver unmentioned:
 
 -) simulation computationally expensive compared to FD, my estimation is with the ~same mesh size and core count we need 8-10 times more computation time with VOF. In 2025 this is not really an issue because there are workstations with 32+, 64+ and even more cores available. Anyway, with the commercial licenses (and FD!) in a small company you would have 4 or 8-core licenses and a tailored CPU (6, 8 or 12 core for the mentioned licenses, because you'd need slightly more than the 4 or 8 cores for post-processing additionally) to keep CPU frequency high. And this means on this very machine you could not do any other stuff, it would be packed with tasks. Thus, if you arrive at a workstation with 36+ cores for 32 cores in OpenFOAM, your 8-10 fold advantage on commercial FD casting simulation licenses is already gone through the window because the increase with 32 (OpenFOAM) over 4 (commercial casting package) is nearly 8 fold (ok, maybe more like 6-7 fold). Granted this workstation will be a bit more expensive, but not 20000-50000€ per year, the cost of a commercial license casting package. For these expenses, you could easily buy a multi CPU server with hundreds of GB of RAM (don't forget 10 or 25GbE!), or two if refurbished. But, also here, choose your CPUs wisely and leave some spare cores for post-processing (you probably don't want to shove around hundreds of GBs or TBs of data to your your workstations, so you would do PP also on the server). 
 
-#Thixomolding simulation of a dummy part
+## Thixomolding simulation of a dummy part
 
 
 
