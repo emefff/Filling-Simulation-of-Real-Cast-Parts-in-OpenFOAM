@@ -6,13 +6,13 @@ Filling simulations of cast parts are very common nowadays. Commercial packages 
 
 -) mesh geometries are simple, mostly hex meshes are used. 
 
--) Mesh geometries do follow the part accurately. 'Minecrafty' look of meshes
+-) Meshes do not follow the part accurately. 'Minecrafty' look of meshes
 
 -) implementations of turbulence models are somewhat questionable
 
 -) mostly wall functions are used to resolve the boundary layer region
 
--) the package I used projects results onto the geometry. I makes the results look nicer, but does not improve results. 
+-) the package I used projects results onto the geometry. I makes the results look nicer, but it does not improve accuracy. 
 
 Due to them being commercial packages they are:
 
@@ -22,11 +22,11 @@ Due to them being commercial packages they are:
 
 -) computationally very efficient and user friendly (there's your ONE advantage)
 
--) VERY expensive monetarily
+-) VERY pricey
 
 -) restricted, per-core licenses, which directly leads to
 
--) running on low core count CPUs (mostly on workstations, it directly follows that you would by it especially buy it for your 4-core or 8-core licnese), or if it this is not the case, running on servers which are probably not optimized for this kind of software. 
+-) only running well on low core count CPUs (mostly on workstations, it directly follows that you would by it especially buy it for your 4-core or 8-core license), or if it this is not the case, running on servers which are probably not the optimum for this kind of software. 
 
 -) restricted regarding exporting the computed data. No, you cannot open any of these files in ParaView or VisIt.
 
@@ -38,7 +38,7 @@ Due to all these reasons, it was a goal of mine for years to use an FOSS CFD-pac
 
 So below I will present findings and results of using a customized solver in OpenFOAM on two filling simulations for Thixomolding (a dummy part and a real part, that might still be in production) and a large sand-casting of a 7 ton submarine propeller. These castings happen on totally different time scales, the THX-castings are 10ms and ~20ms fill time, respectively, and the sand-casting takes about 80s. This has direct consequences to the simulation itself, as we will see later, it is not only the time stepping that is affected. 
 
-Te customized solver used here has the following features:
+The customized solver used here has the following features:
 
 -) VOF two phase flow in fluid incompressible melt and compressible air) therefore
 
@@ -62,21 +62,21 @@ I don't want to leave the drawbacks of this solver unmentioned:
 
 -) we have to dampen U oscillations via limiting functions in controlDict
 
--) when isoAdvection parameters for alpha.melt (the liquid metal phase) are not perfect the volume of the phase does not remain constant. This applies especially to simulations with many timeSteps. So far, I only found this to be very pronounced in long simulations (sand-casting). Short simulations like for die-casting and Thixomolding do not seem to be affected. However, we can apply a strictVolumeCorrection codedFunction in the controlDict for the alpha.melt liquid phase only if its volume increases. This way, we still have the desired shrinking of the liquid phase with decreasing temperature. Without the correction, the fill time of the sand-casting simulation of the propeller is completely wrong (only a tenth of the calculated value. It almost looks like swelling of polyurethane foam!)! What this correction does is apply the time-dependent integral of the inlet U function to the volume, or in other words: the volume that comes in is in the cavity. The drawaback is: all the currently present liquid volume is divided by a calculated factor, which is not entirely correct: only the volume affected by the isoAdvection should be corrected, that is the boundary interface between liquid and air. Granted, the correction factors are very low PER timeStep, but I should mention this method could well increase the 'bubblyness' of the flow artificially. I don't know if it is possible to correct the volume of the boundary interface only, but there could be an additional problem arising from correcting the volume only at the boundary: what if values < 0 are necessary in one cell (meaning: we need to remove more than is present in a boundary cell. which adjacent cell is the 'correct one', if any, to remove additional alpha.melt to keep the correction uniform at the boundary? Should it even be uniform? Then it really gets tricky very quickly....)
+-) when isoAdvection parameters for alpha.melt (the liquid metal phase) are not perfect the volume of the phase does not remain constant. This applies especially to simulations with many timeSteps. So far, I only found this to be very pronounced in long simulations (sand-casting). Short simulations like for die-casting and Thixomolding do not seem to be affected tremendously. However, we can apply a strictVolumeCorrection codedFunction in the controlDict for the alpha.melt liquid phase only if its volume increases. This way, we still have the desired shrinking of the liquid phase with decreasing temperature. Without the correction, the fill time of the sand-casting simulation of the propeller is completely wrong (only a tenth of the calculated value. It almost looks like swelling of polyurethane foam!)! What this correction does is apply the time-dependent integral of the inlet U function to the volume, or in other words: the volume that comes in, is also in the cavity (a kind of 'volume conservation'). The drawaback is: all the currently present liquid volume is divided by a calculated factor, which is not entirely correct: only the volume affected by the isoAdvection should be corrected, that is the boundary interface between liquid and air. Granted, the correction factors are very low PER timeStep, but I should mention this method could well increase the 'bubblyness' of the flow artificially. I don't know if it is possible to correct the volume of the boundary interface only, but there could be an additional problem arising from correcting the volume only at the boundary: what if we need to remove than is present in one songle boundary cell? Which adjacent cell is the 'correct one', if any, to remove additional alpha.melt to keep the correction uniform at the boundary? Should it even be uniform? Then it really gets tricky very quickly....
 
 -) initial timeSteps need to be VERY small to get it going
 
 -) maxCo is ramped up via bash script (which you should always do, anyway) to values << 1 in fine steps, which takes a long time. 
 
--) so far only laminar turbulenceProperties possible, also due to mesh geometry and structure. Astonishingly, this is fulfilled very often in Thixomolding. 
+-) so far only laminar turbulenceProperties possible, also due to mesh geometry and structure. To the laymen it will be a surprise, but this is indeed fulfilled very often in Thixomolding (hard to believe with Uinlet > 40m/s). 
 
--) using snappyHexMesh we are limited in the cell size of the (less important solid) which causes unnecessarily high cell count in solid (however, not the main driver of computation time). 
+-) using snappyHexMesh we are limited in the cell size of the (less important) solid which causes unnecessarily high cell count in solid (however, not the main driver of computation time). 
 
 -) simulation computationally expensive compared to FD, my estimation is with the ~same mesh size and core count we need 8-10 times more computation time with VOF. In 2025 this is not really an issue because there are workstations with 32+, 64+ and even more cores available. Anyway, with the commercial licenses (and FD!) in a small company you would have 4 or 8-core licenses and a tailored CPU (6, 8 or 12 core for the mentioned licenses, because you'd need slightly more than the 4 or 8 cores for post-processing additionally) to keep CPU frequency high. And this means on this very machine you could not do any other stuff, it would be packed with tasks. Thus, if you arrive at a workstation with 36+ cores for 32 cores in OpenFOAM, your 8-10 fold advantage on commercial FD casting simulation licenses is already gone through the window because the increase with 32 (OpenFOAM) over 4 (commercial casting package) is nearly 8 fold (ok, maybe more like 6-7 fold). Granted this workstation will be a bit more expensive, but not 20000-50000€ per year, the cost of a commercial license casting package. For these expenses, you could easily buy a multi CPU server with hundreds of GB of RAM (don't forget 10 or 25GbE!), or two if refurbished. But, also here, choose your CPUs wisely and leave some spare cores for post-processing (you probably don't want to shove around hundreds of GBs or TBs of data to your your workstations, so you would do PP also on the server). 
 
 In a commercial package we would just import the separated .step into the software and go about our business. For use with OpenFOAM we have to:
 
--) create our groups in the two files (fluid and solid) in Salome. The groups are: inlet, outlet, fluid_to_solid, walls_die. solid_to_fluid will later just be the copy of fluid_to_solid, because it is better to keep it exactly the same. Name them as they should appear in OpenFOAM. 
+-) create our surface groups in the two files (fluid and solid) in Salome. The groups are: inlet, outlet, fluid_to_solid, walls_die. solid_to_fluid will later just be the copy of fluid_to_solid, because it is better to keep it exactly the same. Name them as they should appear in OpenFOAM. 
 
 -) mesh the surface groups in Salome, either with GMSH or Netgen. The most important aspect of this step is to keep nodes of adjacent groups exactly at the same place. For example if your circular inlet has 30 nodes on its boundary with fluid_to_solid, the 30 nodes in fluid_to_solid should also be in exactly the same place. For whatever reason, if you set the meshing parameters the same, this is always the case (I really don't know why, I am guessing because the generatrixes are the same for both overlapping circles). Let me reiterate: Even tiny gaps can and will cause problems in snappyHExMesh. So why even use it?? It is the only FOSS mesher for OpenFOAM that can mesh multiple regions at once.
 
