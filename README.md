@@ -120,24 +120,24 @@ Let's look at an image of the velocity in the liquid metal at 5ms, when the maxi
 
 ![U_1](https://github.com/user-attachments/assets/072c8e79-3076-476e-b0e4-64146ece7df0)
 
-Granted, the mesh doesn't look perfect especially at the overflows. But what if I told you people are paying 50000€ per year + personell costs for similar results?
+Granted, the mesh doesn't look perfect especially at the overflows. But what if I told you people are paying 50000€ per license and year + personell costs for similar results?
+A fancy video of this simulation can also be found on YT: https://www.youtube.com/watch?v=danuRmXGdOo
+The video starts quite unusual by showing both phases, air and liquid metal. This is somewhat unusual, but in the in the end, only the metal phase is shown also. Why show it like this? Commercial casting solvers cannot do this, they neglect simulation of the air. The casting engineer also needs the results of the air, he needs to know if and where the speed of sound is reached (he needs to apply corrections if this is the case!). Even today, this is mostly evaluated by hand calculations!
 
+The second simulation  was done on the geometry of real production part. I will and cannot name the customer, but this part is part of an E-Bike assembly widely used in Europe. Therefore, I also have to apply a diffuser as not to give away who made this part. 
 
+## Thixomolding simulation of a real production part
 
+Now what is this about? This step is necessary for me to check if the customized solver is off in some parameter or not. The first and most important check is to verify if the fill time is correct. This is when I first suspected that there had to be some corrections made when using this VOF solver. But back then I was not aware how bad uncorrected results would be with sand-casting. For some reason here the effect of a temperature dependent density were when applied with the rho0, beta formula were strange, the fill time was off by a few ms. Quite a lot when the calculated fill time at a constant 45m/s is only 7.5ms! However, it went away with using icoTabulated values in thermoPhysicalProperties for equationOfState (rho), thermodynamics (Hs, Cp), transport (mu, kappa). That's all. 
 
+In this simulation I tried if the codedFixedValue can also be pressure regulated at the very end of the filling. That is, U is regulated in such a manner like the packing pressure does on a Thixomolding or die-casting machine (phase 1 is velocity controlled, phase 2 of filling is usually pressure controlled). Nevertheless, U can never be larger than the set maximum velocity. 
 
+The velocity profile of the real looks like this:
+![UInlet_vs_time](https://github.com/user-attachments/assets/fc161717-df84-4e92-ab21-807248ba0e72)
 
-
-
-
-
-
-
-
-
-
-
-
+Although the diagram reaches 14ms, the 98% limit is reached at ~10.09ms which is in reasonable agreement with the 7.5ms fill time at 45m/s considering the ramp in the beginning. So the end of this diagram is not really important because the pressure regulation just takes a long time. This is also always the question on a real machine, phase 2 can never account fully for the fill time.
+The pressure curve looks interesting because the limiter does not always seems to work, there are some overshoots above 1000bar:
+![pInlet_vs_time](https://github.com/user-attachments/assets/1affa780-6b57-41d8-a6ef-ed6656f5545d)
 
 
 
