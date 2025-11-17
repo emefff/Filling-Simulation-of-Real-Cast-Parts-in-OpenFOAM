@@ -78,6 +78,29 @@ I don't want to leave the drawbacks of this solver unmentioned:
 
 This part is just a flat plate with automatically generated runners, overflows and vents similar to the geometry presented in this repo: https://github.com/emefff/Geometry-Generation-of-Overflow-and-Venting-Systems-in-Salome-for-Die-Casting-and-Thixomolding 
 
+In a commercial package we would just import the separated .step into the software and go about our business. For use with OpenFOAM we have to:
+
+-) create our groups in the two files (fluid and solid) in Salome. The groups are: inlet, outlet, fluid_to_solid, walls_die. solid_to_fluid will later just be the copy of fluid_to_solid, because it is better to keep it exactly the same. Name them as they should appear in OpenFOAM. 
+
+-) mesh the surface groups in Salome, either with GMSH or Netgen. The most important aspect of this step is to keep nodes of adjacent groups exactly at the same place. For example if your circular inlet has 30 nodes on its boundary with fluid_to_solid, the 30 nodes in fluid_to_solid should also be in exactly the same place. For whatever reason, if you set the meshing parameters the same, this is always the case (I really don't know why, I am guessing because the generatrixes are the same for both overlapping circles). Let me reiterate: Even tiny gaps can and will cause problems in snappyHExMesh. So why even use it?? It is the only FOSS mesher for OpenFOAM that can mesh multiple regions at once.
+
+-) export ASCII .stls of these groups. The file names are the group names. So the inlet becomes inlet.stl and so forth.
+
+-) cp fluid_to_solid.stl solid_to_fluid.stl . We need an exact copy of fluid_to_solid.stl as solid_to_fluid.stl. SnappyHExMesh needs two separate and closed regions, although this seems kind of redundant.
+
+-) still, solid_to_fluid.stl has the wrong names WITHIN the .stl file. So we need to replace all occurrences of "solid fluid_to_solid" and "endsolid fluid_to_solid". Try a "head fluid_to_solid.stl" and a  "tail fluid_to_solid.stl". Execute the following command in the folder: "sed -i 's/fluid_to_solid/solid_to_fluid/g' solid_to_fluid.stl" it will replace all the occurrences of fluid_to_solid. 
+
+-) we need to put the .stls together into two files for our two regions. The fluid region will be called part.stl and the solid region die.stl. Of course, you can call them however you need. So we need to concatenate our separated stls with: "cat inlet.stl outlet.stl fluid_to_solid.stl > part.stl" and "cat walls_die.stl solid_to_fluid.stl > die.stl"
+
+-) copy these two into your constant/triSurface folder
+
+-) use checkSurfaceMesh and surfaceCheck. It is advisable not to ignore presented errors. On the other hand, it is not impossible to get a usable mesh with some errors. I have no clear answer to that. However, if you do not get ANY error, I think you'll be good to proceed in any case.
+
+-) prepare the blockMeshDict anmd snappyHexMeshDict. There are many tutorials for that. First time users definitely need more time. Look for a sufficiently good and uniform castellated ONLY mesh, so deactivate layers and snapped mesh in snappyHExMeshDict. Maybe use a little overhang (larger box) in blockMesh. Start coarse in blockMeshDict and do the rest in refinementRegions and refinementSurfaces in snappyHexMeshDict. Without snapping and layering, meshing this is quite quick. For startes try to keep number of cells in the fluid around 1-2M depending on your machine. In many cases, real-world filling simulations are not better than that with commercial packages. With snappyHexMesh it is difficult to keep the number of cells low in the solid. And because the die always has a larger volume than the fluid, it will definitely need more cells than the fluid. The only option with snappy is to start very coarse with blockMeshDict and refine in snappy, but occasionally you will miss details.
+
+-) If you have a running case with multiRegion, just reuse parts of this. Due to the number of parameters to look at it is very easy to make mistakes. 
+
+-) Determine a maximum velocity (max. inlet velocity times a factor) that will occur in your domain. You should limit the velocity in a limitFields function in the controlDict. Anyway, this will get tricky if it is in the vicinity of the speed of sound. And it will be in die-casting and Thixomolding, because this is the case in real tools. If you have a constriction somewhere in the tool of let's say one fifth of the inlet area and your max. inlet velocity is 50m/s, then you could set your limit to 250m/s. This is not a strict limit, the code introduces dampening factors in the equations that influence the result to approach 250m/s. Only if the simulation crashes, rethink the limit. If the indicated maximum velocity is larger, OF will tell you in the .log. 
 
 
 
