@@ -1,6 +1,6 @@
 # Filling-Simulation-of-Real-Cast-Parts-in-OpenFOAM
 
-Filling simulations of cast parts are very common nowadays. Commercial packages exploiting the finite difference (FD) method exist and are readily available, although at a premium price. Historically, to my knowledge, all of them are based on the finite difference method due to these simulations being computationally very expensive. From the method alone it directly follows:
+Filling simulations of cast parts are very common nowadays. Commercial packages exploiting the finite difference (FD) method exist and are readily available, although at high cost. Historically to my knowledge, all of them are based on the finite difference method due to these simulations being computationally very expensive. From the method alone it directly follows:
 
 -) meshes are structured
 
