@@ -143,7 +143,7 @@ The pressure curve looks interesting because the limiter does not always seems t
 
 The reason remains unclear, it could be just because with the codedValueFunction we can only react to a pressure that is already over the limit and if the timeStep is large (this is what we want, because we cannot wait forever to complete the simulation) large overshoots can happen. so with smaller timeStepping we should be able to get a flatter curve. In this case, there is no clear separation of phase 1 and phase 2 in the shot, like on a real machine. If you look at the code, the user cannot foresee when the speed drops in a timeStep and is then increased to match the pressure of 1000bar. But separating the two phases is clearly possible when we, for example, increase the U inlet such that 1000bar are reached only after a certain percentage of filling. This should be easy.
 
-The results are within agreement of the commercial software, like mentioned before, here's a blurred image of the real cast part:
+The results are within agreement of the commercial software, like mentioned before, here's a blurred image of the real cast part at 6ms when velocity is still high:
 
 
 
