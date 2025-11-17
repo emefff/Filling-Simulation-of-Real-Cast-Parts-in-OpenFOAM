@@ -133,11 +133,17 @@ Now what is this about? This step is necessary for me to check if the customized
 In this simulation I tried if the codedFixedValue can also be pressure regulated at the very end of the filling. That is, U is regulated in such a manner like the packing pressure does on a Thixomolding or die-casting machine (phase 1 is velocity controlled, phase 2 of filling is usually pressure controlled). Nevertheless, U can never be larger than the set maximum velocity. 
 
 The velocity profile of the real looks like this:
+
 ![UInlet_vs_time](https://github.com/user-attachments/assets/fc161717-df84-4e92-ab21-807248ba0e72)
 
 Although the diagram reaches 14ms, the 98% limit is reached at ~10.09ms which is in reasonable agreement with the 7.5ms fill time at 45m/s considering the ramp in the beginning. So the end of this diagram is not really important because the pressure regulation just takes a long time. This is also always the question on a real machine, phase 2 can never account fully for the fill time.
 The pressure curve looks interesting because the limiter does not always seems to work, there are some overshoots above 1000bar:
+
 ![pInlet_vs_time](https://github.com/user-attachments/assets/1affa780-6b57-41d8-a6ef-ed6656f5545d)
+
+The reason remains unclear, it could be just because with the codedValueFunction we can only react to a pressure that is already over the limit and if the timeStep is large (this is what we want, because we cannot wait forever to complete the simulation) large overshoots can happen. so with smaller timeStepping we should be able to get a flatter curve. In this case, there is no clear separation of phase 1 and phase 2 in the shot, like on a real machine. If you look at the code, the user cannot foresee when the speed drops in a timeStep and is then increased to match the pressure of 1000bar. But separating the two phases is clearly possible when we, for example, increase the U inlet such that 1000bar are reached only after a certain percentage of filling. This should be easy.
+
+The results are within agreement of the commercial software, like mentioned before, here's a blurred image of the real cast part:
 
 
 
