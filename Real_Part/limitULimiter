@@ -1,0 +1,124 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# stop on errors
+set -e
+
+timeStepWaiting=0
+echo "+++++ First waiting period before starting loop"
+echo "+++++ Waiting for $timeStepWaiting s"
+sleep $timeStepWaiting
+echo ""
+
+com1='echo "----------------------------------------------------------------"'
+com2='tail -n 80 "$(ls -Art /var/tmp/myCustomSolver* | tail -n 1)"| grep "*****Ramping up U " | sed "s/^[ \t]*//" | tail -n 1 '
+com3='tail -n 80 "$(ls -Art /var/tmp/myCustomSolver* | tail -n 1)"| grep "*****Pressure " | sed "s/^[ \t]*//" | tail -n 1 '
+com4='tail -n 80 "$(ls -Art /var/tmp/myCustomSolver* | tail -n 1)"| grep "Phase-1 volume fraction =" | sed "s/^[ \t]*//" | tail -n 1 '
+# sed for removing leading spaces from output
+
+date
+echo "------------------------------------------------"
+echo ""
+
+writeInterval_changed=0
+pause=300 #120 # seconds
+factor=-3.0 #-7.49738 # from highest U in model in vents, 28.52outlet/213.8inlet
+
+while true; do
+  echo "************************************************"
+
+  com2_result=$(eval "$com2")
+  com3_result=$(eval "$com3")
+  com4_result=$(eval "$com4")
+
+  var="empty"
+
+  if [ -n "$com2_result" ]; then
+    var="$com2_result"
+    #echo "*"
+  else
+    var="$com3_result"
+    #echo "**"
+  fi
+
+  # get the last component of the vector string of U
+  velocity_component=$(echo "$var" | sed -E 's/.*\(([0-9., -]+)\).*/\1/' | awk -F, '{print $NF}' | tr -d ' ')
+  echo "Set velocity: $velocity_component"
+
+  velocity_new_limit=$(echo "$velocity_component * $factor" | bc -l)
+  echo "Velocity limit: $velocity_new_limit"
+
+  # extract the volume fraction of phase-1  
+  phase1_fraction=$(echo "$com4_result" | sed -n 's/.*volume fraction = \([-+0-9.eE]*\).*/\1/p')
+  # convert to decimal in all cases
+  phase1_fraction_dec=$(LC_NUMERIC=C awk "BEGIN {printf \"%.10f\", $phase1_fraction}")
+  
+  # set the new value as limit in controlDict limitUFields:
+  # functions
+  # {
+  #    limitUFields
+  #    {
+  #      type            limitFields;
+  #      libs            ( fieldFunctionObjects );
+  #      fields          ( U );
+  #      limit           max;
+  #      max             120.044;
+  #      region          fluid;
+  #      enabled         true;
+  #      log             true;
+  #      timeStart       0;
+  #      timeEnd         1000;
+  #      executeControl  timeStep;
+  #      executeInterval 1;
+  #     writeControl    adjustableRunTime;
+  #     writeInterval   25;
+  #   }
+  
+  # reading the set U limit  
+  velocity_max_old=$(foamDictionary -entry "functions/limitUFields/max" -value system/controlDict 2>/dev/null)  
+  echo "Previous limitUFields: $velocity_max_old"
+  sleep 0.2
+  # setting the new value
+  echo "Setting new U limit $velocity_new_limit"
+  foamDictionary system/controlDict -entry "functions/limitUFields/max" -set $velocity_new_limit 2>/dev/null
+  sleep 0.2
+
+  # printing the phase-1 fraction
+  echo "Phase-1 fraction: $phase1_fraction_dec"
+  # if phase-1 fraction >= 98% setting a lower write interval of 1e-5 (default = 1e-4 here)
+  if [ "$(echo "$phase1_fraction_dec >= 0.98" | bc -l)" = "1" ]; then
+    if [[ $writeInterval_changed = "0" ]]; then
+      foamDictionary system/controlDict -entry writeInterval -set 1e-5
+      writeInterval_changed=1
+      echo "WriteInterval set to 1e-5"
+    else
+      writeInterval_old=$(foamDictionary -entry writeInterval -value system/controlDict 2>/dev/null)
+      echo "Actual writeInterval remains: $writeInterval_old"
+    fi
+  else
+    writeInterval_old=$(foamDictionary -entry writeInterval -value system/controlDict 2>/dev/null)
+    echo "Actual writeInterval remains: $writeInterval_old"
+  fi
+  
+  # kill the simulation if phase-1 >= 99%
+  if [ "$(echo "$phase1_fraction_dec >= 0.99" | bc -l)" = "1" ]; then
+    echo "++++++++++++++++++++++++++++++++++++++++++++"
+    echo "Killing all simulation processes......  RIP+"
+    echo "++++++++++++++++++++++++++++++++++++++++++++"
+    sleep 0.2
+    killall myCustomSolver
+    # kill script also
+    echo ""
+    echo "Script will terminate now."
+    date
+    exit 0 
+    echo "------------------------------------------------"
+  fi
+  
+  echo ""
+  sleep $pause
+
+done
+
+
+
