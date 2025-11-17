@@ -158,6 +158,13 @@ Scaled up to approx. 5m in diameter the result is a volume of 0.863m³ total cas
 
 <img width="2874" height="1656" alt="Bildschirmfoto vom 2025-11-17 15-00-52" src="https://github.com/user-attachments/assets/42987c6e-57d4-49c4-a815-627f172e49c2" />
 
+With this simulation, I encountered the following problem, which was already mentioned above briefly: the volume of the liquid phase present in the cavity increased with every timeStep. In the CFD commutiy this is known as "non-physical phase gain" or "numerical volume increase". However, I was not aware of this until I made this simulation with this customized solver. In this paper, this phenomenon is discussed also regarding an OpenFOAM solver: https://pmc.ncbi.nlm.nih.gov/articles/PMC9145428/ 
+
+There you can find the following paragraph: 
+'''
+"MULES is the default interface description method in OpenFOAM phase change solvers and has been used in extensive phase change problems. The VOF class has a non-sharp character, meaning it produces a smeared interface between phases, resulting in the non-accurate calculation of interfacial properties and generating spurious currents. The existence of non-physical spurious currents leads to the increased interfacial mass transfer while simulating condensation and evaporation. The mentioned scenario contributes to high numerical errors in such simulations and can be encountered as the chief shortcoming of VOF."
+'''
+
 
 
 
