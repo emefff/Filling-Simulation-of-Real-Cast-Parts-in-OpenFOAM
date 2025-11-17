@@ -145,9 +145,7 @@ The reason remains unclear, it could be just because with the codedValueFunction
 
 The results are within agreement of the commercial software, like mentioned before, here's a blurred image of the real cast part at 6ms when velocity is still high:
 
-
-
-
+<img width="2908" height="1400" alt="Bildschirmfoto vom 2025-11-17 14-31-26" src="https://github.com/user-attachments/assets/976b5060-a38f-4e01-a654-8a46de0d3e41" />
 
 
 
