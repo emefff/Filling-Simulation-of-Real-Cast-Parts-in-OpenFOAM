@@ -27,13 +27,17 @@ Due to them being commercial packages they are:
 
 -) restricted regarding exporting the computed data. No, you cannot open any of these files in ParaView or VisIt.
 
+-) post-processing is restricted to the features in the package. The formulation of own computed parameters, at least in my used package, was (it probably still is) weird, cumbersome and not really straight-forward. It is often not possible to 'prove' a custom formula, e.g. for your own erosion mode because not all data is readily accessible. 
+
+-) at least the solver I used was not a 'real' two phase solver. It DID NOT SIMULATE the air in the cavity. 'Air' is just the volume not filled. It is therefore not a 'true two phase solver'. I did many tests regarding the air of my commercial solver, e.g. increasing filling pressure did not influence air bubble size!
+
 Due to all these reasons, it was a goal of mine for years to use an FOSS CFD-package for filling simulations. Little did I know of the problems I would encounter. Today, I think, with the right solver and hardware it's possible to do 90% of what the commercial packages regarding filling (I am still not talking about solidification, I will elaborate later why I don't think it is important to have it in simulation for die-casting and Thixomolding. But it is for any kind of large sand-casting and the like). 
 
-So below I will present findings and results of using a customized solver in OpenFOAM on two filling simulations for Thixomolding (a dummy part and a real part, that might still be in production) and a large sand-casting of a 7 ton submarine propeller. These castings happen on totally different time scales, the THX-castings are 10ms and ~20ms fill time, respectively, and the sand-casting takes about 80s. This has direct consequences to the simulation itself, as we will see later it is not only the time stepping that is affected. 
+So below I will present findings and results of using a customized solver in OpenFOAM on two filling simulations for Thixomolding (a dummy part and a real part, that might still be in production) and a large sand-casting of a 7 ton submarine propeller. These castings happen on totally different time scales, the THX-castings are 10ms and ~20ms fill time, respectively, and the sand-casting takes about 80s. This has direct consequences to the simulation itself, as we will see later, it is not only the time stepping that is affected. 
 
 Te customized solver used here has the following features:
 
--) VOF two phase flow in fluid incompressible melt and compressible air)
+-) VOF two phase flow in fluid incompressible melt and compressible air) therefore
 
 -) it is multiRegion (fluid and solid)
 
@@ -43,11 +47,11 @@ Te customized solver used here has the following features:
 
 -) many possibilities for material models as these are standard in OF (for example icoTabulated thermoPhysicalProperties for the liquid metal and perfectGas for the air etc., they can be combined)
 
--) with a codedFunctionValue at the U inlet boundary condition, the behaviour of the casting machine can be controlled AND regulated. We can introduce pressure limits (also with time retardation etc.), velocity limits, basically we can really do what we want. Drawback: some C++ skills required. Advantage: you will learn C++. 
+-) with a codedFunctionValue at the U inlet boundary condition, the behaviour of the casting machine can be controlled AND regulated. We can introduce pressure limits (also with time retardation etc.), velocity profiles (!), velocity limits that actively react to pressure etc. , basically we can really do what we want. Drawback: some C++ skills required. Advantage: you will learn C++. 
 
 I don't want to leave the drawbacks of this solver unmentioned:
 
--) it can be highly unstable, only first order ddtSchemes work. 
+-) it can be highly unstable, only first order ddtSchemes work. I will say this: using commercial packages we do not even know the accuracy of the used time schemes, we are not given this information!
 
 -) it has only worked reliably with simple meshes (castellated) out of snappyHexMesh, but hey, the commercial packages also have this problem?!? What do I mean by 'reliably': a 'fire and forget' type of simulation, that does not need my human interference. It is launched, together with necessary DIY control scripts, and it runs until the end. 
 
