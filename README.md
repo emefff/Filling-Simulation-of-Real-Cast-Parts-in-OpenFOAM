@@ -19,7 +19,7 @@ Due to them being commercial packages they are:
 
 -) computationally very efficient and user friendly (there's your ONE advantage)
 
--) VERY expensive
+-) VERY expensive monetarily
 
 -) restricted, per-core licenses, which directly leads to
 
@@ -29,7 +29,22 @@ Due to them being commercial packages they are:
 
 Due to all these reasons, it was a goal of mine for years to use an FOSS CFD-package for filling simulations. Little did I know of the problems I would encounter. Today, I think, with the right solver and hardware it's possible to do 90% of what the commercial packages regarding filling (I am still not talking about solidification, I will elaborate later why I don't think it is important to have it in simulation for die-casting and Thixomolding. But it is for any kind of large sand-casting and the like). 
 
-So below I will present findings and results of using a customized solver in OpenFOAM on two filling simulations for Thixomolding (a dummy part and a real part, that might still be in production) and a large sand-casting of a 7 ton submarine propeller. These castings happen on totally different time scales (the THX-castings are 10ms and ~20ms fill time respectively and the sand-casting takes about 80s) with direct consequences to the simulation itself, as we will see later it is not only the time stepping that is affected. 
+So below I will present findings and results of using a customized solver in OpenFOAM on two filling simulations for Thixomolding (a dummy part and a real part, that might still be in production) and a large sand-casting of a 7 ton submarine propeller. These castings happen on totally different time scales, the THX-castings are 10ms and ~20ms fill time, respectively, and the sand-casting takes about 80s. This has direct consequences to the simulation itself, as we will see later it is not only the time stepping that is affected. 
+
+Te customized solver used here has the following features:
+-) VOF two phase flow in fluid incompressible melt and compressible air)
+
+-) it is multiRegion (fluid and solid)
+
+-) conjugated heat transfer coupling with solid
+
+-) isoAdvection
+
+-) many possibilities for material models as these are standard in OF (for example icoTabulated thermoPhysicalProperties for the liquid metal and perfectGas for the air etc., they can be combined)
+
+
+
+
 
 
 
