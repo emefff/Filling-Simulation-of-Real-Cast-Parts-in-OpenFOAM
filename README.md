@@ -177,7 +177,7 @@ The predicted velocities are in agreement with the calculations done before. How
 
 The final results will still take some time, at least one more week. 
 
-emefffægmx.at
+emefff@gmx.at
 
 
 
