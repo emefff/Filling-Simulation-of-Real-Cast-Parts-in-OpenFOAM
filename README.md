@@ -156,8 +156,7 @@ The simulation of this part and others will have to be repeated with the finding
 The submarine propeller used here is a ficticious propeller designed by a talented engineer on GrabCAD (today it's not available anymore, for unknown reasons). The geometry was alread used in the repository showing results of a flow simulation of the very same propeller with diffuser and a ficticious submarine: https://github.com/emefff/Thrust-And-Flow-Of-Submarine-Propeller-In-OpenFOAM
 Scaled up to approx. 5m in diameter the result is a volume of 0.863m³ total casting volume with risers, basin, runners and vents. I have to admit here, this is the first design of a sand casting for me, so there might be some errors in the setup. However, runner diameters and pressure calculation were done following a casting standard for these types of castings. After all, it is purely a test case for the solver. The designed total casting is placed into a sand mould, in reality it would of course not entirely be sand, but after all only the material in contact with the liquid metal is important. From literature I have learned, that propeller alloys are called 'bronzes' although they are really more like brasses. So the material parameters here used are very brass-like. This is the model used for the simulation, a life-size person (https://grabcad.com/library/bossy-girl-1) was inserted for comparison:
 
-<img width="2852" height="1546" alt="Bildschirmfoto vom 2025-11-17 14-51-38" src="https://github.com/user-attachments/assets/a2797e50-9d04-41e8-aa6a-9bd7dc091c6e" />
-
+<img width="2874" height="1656" alt="Bildschirmfoto vom 2025-11-17 15-00-52" src="https://github.com/user-attachments/assets/42987c6e-57d4-49c4-a815-627f172e49c2" />
 
 
 
