@@ -36,7 +36,7 @@ Due to them being commercial packages they are:
 
 Due to all these reasons, it was a goal of mine for years to use an FOSS CFD-package for filling simulations. Little did I know of the problems I would encounter. Today, I think, with the right solver and hardware it's possible to do 90% of what the commercial packages regarding filling (I am still not talking about solidification, I will elaborate later why I don't think it is important to have it in simulation for die-casting and Thixomolding. But it is for any kind of large sand-casting and the like). 
 
-So below I will present findings and results of using a customized solver in OpenFOAM on two filling simulations for Thixomolding (a dummy part and a real part, that might still be in production) and a large sand-casting of a 7 ton submarine propeller. These castings happen on totally different time scales, the THX-castings are 10ms and ~20ms fill time, respectively, and the sand-casting takes about 80s. This has direct consequences to the simulation itself, as we will see later, it is not only the time stepping that is affected. 
+So below I will present findings and results of using a customized solver in OpenFOAM on two filling simulations for Thixomolding (a dummy part and a real part, that might still be in production) and a large sand-casting of a 7 ton submarine propeller. These castings take place on totally different time scales, the THX-castings are 10ms and ~20ms fill time, respectively, and the sand-casting takes about 80s. This has direct consequences to the simulation itself, as we will see later, it is not only the time stepping that is affected. For a more realistic casting simulation, it is essential to apply codedFixedValue boundary conditions and also codedFunction in the controlDict. 
 
 The customized solver used here has the following features:
 
@@ -50,7 +50,7 @@ The customized solver used here has the following features:
 
 -) many possibilities for material models as these are standard in OF (for example icoTabulated thermoPhysicalProperties for the liquid metal and perfectGas for the air etc., they can be combined)
 
--) with a codedFunctionValue at the U inlet boundary condition, the behaviour of the casting machine can be controlled AND regulated. We can introduce pressure limits (also with time retardation etc.), velocity profiles (!), velocity limits that actively react to pressure etc. , basically we can really do what we want. Drawback: some C++ skills required. Advantage: you will learn C++. 
+-) with a codedFixedValue at the U inlet boundary condition, the behaviour of the casting machine can be controlled AND regulated. We can introduce pressure limits (also with time retardation etc.), velocity profiles (!), velocity limits that actively react to pressure etc. , basically we can really do what we want. In the controlDict we can also apply codedFunctions that give more realistic results with this VOF-solver. Drawback: some C++ skills required. Advantage: you will learn C++. 
 
 I don't want to leave the drawbacks of this solver unmentioned:
 
