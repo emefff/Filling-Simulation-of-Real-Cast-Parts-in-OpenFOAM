@@ -163,6 +163,18 @@ With this simulation, I encountered the following problem, which was already men
 There you can find the following paragraph: 
 > "MULES is the default interface description method in OpenFOAM phase change solvers and has been used in extensive phase change problems. The VOF class has a non-sharp character, meaning it produces a smeared interface between phases, resulting in the non-accurate calculation of interfacial properties and generating spurious currents. The existence of non-physical spurious currents leads to the increased interfacial mass transfer while simulating condensation and evaporation. The mentioned scenario contributes to high numerical errors in such simulations and can be encountered as the chief shortcoming of VOF."
 
+Now, although this coustomized solver does not use any phaseChange, it still has to compute the boundary phase between liquid metal and air. And in my previous runs it was obvious, that the volume is not correct. 
+
+However, to counteract this numerical phenomenon, a strictVolumeCorrection in form of a codedFunction in the controlDict has been applied. Because the inflow at the inlet and the already present phase in the basin was determined by the user, we apply some simple calculus to get the volume fraction at any time (we need to perform an integration over time on the inlet U curve to get the time-dependent volumeFraction within the cavity). Quite unnecessary in retrospect, I did a ramp of the U inlet until t=1e-3s. Both files, the U BCs and the controlDict are shared, so you will understand when looking at them. 
+
+This simulation is still running as of today (17/11/2025), so the results presented below are from the casting approx. half-filled: 
+
+![U_1](https://github.com/user-attachments/assets/b0a667e6-1d15-47de-8eb2-2bffd5814e03)
+
+The predicted velocities are in agreement with the calculations done before. However, the level in the basin is now quite high, the choke point in the runner does not seem to get along with the defined flow. Due to the long simulation time, this time we see a real influence on T.melt. However, this time and also due to the numerical phenomenon encountered, the material parameters do not include any increase of viscosity during cooling (there will be no freezing of metal visible in this simulation):
+
+![Tmelt_1](https://github.com/user-attachments/assets/1003d0a8-b64e-4805-86d7-ab326c9f4cf5)
+
 
 
 
