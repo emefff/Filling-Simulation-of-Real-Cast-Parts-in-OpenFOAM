@@ -122,9 +122,9 @@ Let's look at an image of the velocity in the liquid metal at 5ms, when the maxi
 
 Granted, the mesh doesn't look perfect especially at the overflows. But what if I told you people are paying 50000€ per license and year + personell costs for similar results?
 A fancy video of this simulation can also be found on YT: https://www.youtube.com/watch?v=danuRmXGdOo
-The video starts quite unusual by showing both phases, air and liquid metal. This is somewhat unusual, but in the in the end, only the metal phase is shown also. Why show it like this? Commercial casting solvers cannot do this, they neglect simulation of the air. The casting engineer also needs the results of the air, he needs to know if and where the speed of sound is reached (he needs to apply corrections if this is the case!). Even today, this is mostly evaluated by hand calculations!
+The video starts quite unusual by showing both phases, air and liquid metal. This is somewhat unusual, but in the in the end, only the metal phase is shown also. Why show it like this? Because commercial casting solvers CANNOT DO this, they neglect simulation of the air. The casting engineer also needs the results of the air, he needs to know if and where the speed of sound is reached (he needs to apply corrections if this is the case!). Even today, this is mostly evaluated by hand calculations!
 
-The second simulation  was done on the geometry of real production part. I will and cannot name the customer, but this part is part of an E-Bike assembly widely used in Europe. Therefore, I also have to apply a diffuser as not to give away who made this part. 
+The second simulation  was done on the geometry of real production part. I will and cannot name the customer, but this part is part of an E-Bike assembly widely used in Europe. Therefore, I also have to apply some blurring as not to give away who made this part. 
 
 ## Thixomolding simulation of a real production part
 
