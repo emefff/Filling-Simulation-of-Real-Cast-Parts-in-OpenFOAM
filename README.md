@@ -153,7 +153,7 @@ The simulation of this part and others will have to be repeated with the finding
 
 ## Sand-casting simulation of a submarine propeller
 
-The submarine propeller used here is a ficticious propeller designed by a talented engineer. The geometry was alread used in the repository showing results of a flow simulation of the very same propeller with diffuser and a ficticious subma
+The submarine propeller used here is a ficticious propeller designed by a talented engineer on GrabCAD (today it's not available any more, for unknown reasons). The geometry was alread used in the repository showing results of a flow simulation of the very same propeller with diffuser and a ficticious submarine: 
 
 
 
