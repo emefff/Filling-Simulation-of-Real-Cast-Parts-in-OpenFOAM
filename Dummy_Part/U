@@ -1,0 +1,287 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2406                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+//############################################################################################################################################
+    inlet
+    {
+	
+	type codedFixedValue;
+        value uniform (0 0 -4.333);//keep this so we see where U value comes from.
+        name inlet_rampedU_w_pLimiter;// name of this BC for compiling and dir
+        codeOptions
+        #{
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+        codeInclude
+        #{
+            #include "fvCFD.H"
+            #include <cmath>
+            #include <iostream>
+            #include <fstream>
+            #include <string>
+            #include <regex>
+            #include <chrono>
+            #include <dirent.h>
+            #include <sys/stat.h>
+            #include <string>
+            #include <deque>
+            #include <vector>
+            #include <iostream>
+            #include <algorithm>
+            
+            std::string findNewestFile(const std::string& folder)// finds newest file in folder beginning with "myCustomSolver"
+            {
+                DIR* dir = opendir(folder.c_str());
+                if (!dir) return "";
+            
+                std::string newestFile;
+                time_t newestTime = 0;
+            
+                struct dirent* entry;
+                while ((entry = readdir(dir)) != NULL)
+                {
+                    std::string fname(entry->d_name);
+                    if (fname.find("myCustomSolver") == 0)
+                    {
+                        std::string fullpath = folder + "/" + fname;
+                        struct stat s;
+                        if (stat(fullpath.c_str(), &s) == 0)
+                        {
+                            if (S_ISREG(s.st_mode)) // regular file check
+                            {
+                                if (s.st_mtime > newestTime)
+                                {
+                                    newestTime = s.st_mtime;
+                                    newestFile = fullpath;
+                                }
+                            }
+                        }
+                    }
+                }
+                closedir(dir);
+                return newestFile;
+            }
+
+            double extractLastPhaseFraction(const std::string& filename, int maxLines = 80, int bufferSize = 8192)// does not read every char instead blocks are read backwards
+            {
+                std::ifstream file(filename, std::ios::binary | std::ios::ate);
+                if (!file.is_open())
+                    return 0;
+            
+                std::streamoff fileSize = file.tellg();
+                std::streamoff pos = fileSize;
+                std::vector<char> buffer(bufferSize);
+                std::string leftover;
+                std::vector<std::string> lines;
+            
+                while (pos > 0 && lines.size() < static_cast<size_t>(maxLines))
+                {
+                    std::streamoff toRead = std::min(pos, static_cast<std::streamoff>(bufferSize));
+                    pos -= toRead;
+            
+                    file.seekg(pos);
+                    file.read(buffer.data(), toRead);
+            
+                    std::string chunk(buffer.data(), toRead);
+                    chunk += leftover;
+            
+                    size_t start = chunk.size();
+                    while (start > 0 && lines.size() < static_cast<size_t>(maxLines))
+                    {
+                        size_t found = chunk.rfind('\n', start - 1);
+                        if (found == std::string::npos)
+                        {
+                            leftover = chunk.substr(0, start);
+                            break;
+                        }
+                        else
+                        {
+                            lines.push_back(chunk.substr(found + 1, start - found - 1));
+                            start = found;
+                        }
+                    }
+                }
+            
+                std::reverse(lines.begin(), lines.end());
+            
+                std::regex rgx(R"(Phase-1 volume fraction = ([+-]?[0-9]*\.?[0-9]+([eE][+-]?[0-9]+)?))");
+                std::smatch match;
+                for (auto it = lines.rbegin(); it != lines.rend(); ++it)
+                {
+                    if (std::regex_search(*it, match, rgx))
+                    {
+                        return std::stod(match[1].str());
+                    }
+                }
+                return 0;
+            }
+
+            class Timer {
+            private:
+                using Clock = std::chrono::steady_clock;
+                using Second = std::chrono::duration<double, std::ratio<1>>;
+                std::chrono::time_point<Clock> m_beg{ Clock::now() };
+            public:
+                void reset() { m_beg = Clock::now(); }
+                double elapsed() const { return std::chrono::duration_cast<Second>(Clock::now() - m_beg).count(); }
+            };            
+            
+        #};
+        
+        code
+        #{
+            const scalar pressureMax = 1E8; // pressure threshold (Pa) = 1000bar
+            const scalar reductionPercent_pressure = 0.99; // reduce velocity by 1% if pressure exceeded
+            const scalar reductionPercent_filling = 0.999; // reduce velocity by 0.1% if phaseFraction = 0.985 exceeded
+            const scalar durationRamp = 5E-3; // duration of initial ramping of U (s)
+            const fvPatch& boundaryPatch = this->patch();// this patch (inlet)
+            const vectorField& Cf = boundaryPatch.Cf();// Center of face
+            const scalar t = this->db().time().value();// actual time
+            const volScalarField& pField = this->db().lookupObject<volScalarField>("p_rgh");// pressure_rgh field
+            const fvPatchField<scalar>& pBoundaryField = pField.boundaryField()[boundaryPatch.index()];
+            bool pressureExceeded = false;// bool to check if pressureMax is exceeded
+            scalar nFaceExceededPressure = -10;
+            std::string filename = "fool";
+            
+            // Check if pressure exceeds threshold on any patch face. Needs to be outside loop, bc we don't want to check every face and reduce U for such a face.
+            // We could get an uneven U-distribution on inlet wih that. Instead we want to reduce U for all faces if only one face exceeds pressureMax.
+            // The first face to exceed the maxPressure counts, very often it is the first (cell[0])
+            //Timer timer;
+            for (label i = 0; i < pBoundaryField.size(); ++i) {
+                if (pBoundaryField[i] > pressureMax) {
+                    pressureExceeded = true;
+                    nFaceExceededPressure = i;
+                    std::cout << "+++++Face with exceeded pressure nr. "<< nFaceExceededPressure << ", pressure is " << pBoundaryField[nFaceExceededPressure] << " . " << std::endl << std::flush;
+                    break; 
+                }
+            }
+            //std::cout << "Elapsed time in pressure evaluation: " << timer.elapsed() << " seconds\n" << std::endl << std::flush;
+            
+            //timer.reset(); // reset timer for reuse
+            filename = findNewestFile("/var/tmp");
+            
+            //timer.reset(); // reset timer for reuse
+            double phaseFraction = extractLastPhaseFraction(filename); 
+
+            vectorField& UPatch = *this;  // current patch velocity values 
+            const scalar nFaces = UPatch.size(); // number of faces in this patch, everything here is face centric
+            
+            vectorField UNew(nFaces);// the new UField we will assign to the faces
+            
+            scalar counter_rampDuration = 0;
+            scalar counter_phaseFraction = 0;
+            const scalar initialVelocityz = 4.5;
+            const scalar finalVelocityz = 45;
+            const vector finalVelocity = vector(0, 0, -finalVelocityz);
+            
+            forAll(Cf, i)
+            {
+                if (t <= durationRamp) // first we ramp up U to finalVelocity in durationRamp
+                {
+                    scalar rampSlope = (finalVelocityz - initialVelocityz) / durationRamp;
+                    vector initialVelocity = vector(0, 0, -initialVelocityz);
+                    vector targetVelocity = vector(0, 0, -1) * rampSlope * t + initialVelocity;
+                    UNew[i] = targetVelocity;//--------------
+                    if (i==0) //only for the first face, only remove for checking if every face is treated equally.
+                    {
+                    std::cout << "*****Ramping up U ("<< UNew[i].x() << ", " << UNew[i].y() << ", " << UNew[i].z() << ")" << std::endl << std::flush;
+                    }
+                }
+                else // after the ramp it's all pressure controlled
+                {
+                    if (counter_rampDuration==0) // we need this because we might not hit t=rampDuration exactly, but only execute once for all cells!
+                    {
+                    UNew[i] = finalVelocity;//--------------
+                    counter_rampDuration = 1;
+                    }
+                    if (pressureExceeded) 
+                    {
+                        // Reduce current velocity by factor reductionPercent_pressure
+                        UNew[i] = UPatch[i] * reductionPercent_pressure;
+                        if (i==0)//only for the face with highest pressure, remove only for checking if every face is treated equally.
+                        {
+                        std::cout << "*****Pressure " << pBoundaryField[nFaceExceededPressure] << " > pressureMax, reducing U to ("<< UNew[i].x() << ", " << UNew[i].y() << ", " << UNew[i].z() << ")" << std::endl << std::flush;
+                        //std::cout << "+++++Pressure " << pBoundaryField[0] << " > pressureMax, reducing U to ("<< UNew[i].x() << ", " << UNew[i].y() << ", " << UNew[i].z() << ")" << std::endl << std::flush;
+                        }
+                    }
+                    else
+                    {
+                        // Keep original velocity if below threshold
+                        UNew[i] = UPatch[i];
+                        if (i==0)//only for the face with 0, remove only for checking if every face is treated equally.
+                        {
+                        std::cout << "*****Pressure " << pBoundaryField[i] << " <= pressureMax, U remains ("<< UNew[i].x() << ", " << UNew[i].y() << ", " << UNew[i].z() << ")" << std::endl << std::flush;
+                        }
+                    }
+                    //ramp down U when phaseFraction >=0.98 with factor reductionPercent_filling
+                    if (phaseFraction >= 0.985 && counter_phaseFraction == 0) // reduce U at the end, this is executed more than once in a timeStep, so reductionPercent_filling must be only a tiny bit below 1.
+                    {
+                        // Reduce current velocity by factor
+                        UNew[i] = UPatch[i] * reductionPercent_filling;
+                        counter_phaseFraction = 1;
+                        if (i==0)//only show once
+                        {
+                            std::cout << "-----phaseFraction " << phaseFraction << " > 0.98, reducing U to ("<< UNew[i].x() << ", " << UNew[i].y() << ", " << UNew[i].z() << ")" << std::endl << std::flush;
+                        }
+                    }
+                }
+            }
+            operator==(UNew);            
+        #}; 
+    }
+//################################################################################################################################################    
+    outlet
+    {
+        
+        type            permeableAlphaPressureInletOutletVelocity;
+        phi             phi;            // flux field
+        rho             rho;            // density field
+        alpha           alpha.melt;    // volume fraction field for phase (e.g., water)
+        alphaMin        0.5;//0.01;           // minimum value to allow outlet
+        value           uniform (0 0 0);
+        /*This conditional switching lets the boundary act permeably for the phase when alpha is low (open) and act like a solid wall when the phase presence exceeds the threshold.*/
+
+    }
+    solid_to_fluid
+    {
+        type fixedValue;
+        value uniform (0 0 0);
+    }
+    walls_die
+    {
+        type fixedValue;
+        value uniform (0 0 0);
+    }
+    fluid_to_solid
+    {
+        type            slip;
+    }
+    "proc.*"
+    {
+        type    processor;
+        value   $internalField;
+    }
+}
+
+
+// ************************************************************************* //
