@@ -1,0 +1,190 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2406                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+FoamFile
+{
+    version         2;
+    format          ascii;
+    class           dictionary;
+    location        "system";
+    object          controlDict;
+}
+
+isoAdvection    1;
+
+application     myCustomSolver;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         100;
+
+deltaT          1e-09;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.05;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression no;
+
+timeFormat      general;
+
+timePrecision   9;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           0.85;
+
+maxAlphaCo      0.85;
+
+maxDeltaT       0.01;
+
+maxDi           1;
+
+maxCapillaryNum 0.2;
+
+libs            ( "libpostProcess.so" "libfluidThermo.so" "libsolverFunctionObjects.so" );
+
+functions
+{
+    limitUFields
+    {
+        type            limitFields;
+        libs            ( fieldFunctionObjects );
+        fields          ( U );
+        limit           max;
+        max             5;
+        region          fluid;
+        enabled         true;
+        log             true;
+        timeStart       0;
+        timeEnd         1000;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    adjustableRunTime;
+        writeInterval   25;
+    }
+    limitp_rghFields
+    {
+        type            limitFields;
+        libs            ( fieldFunctionObjects );
+        fields          ( p_rgh );
+        limit           min;
+        min             0;
+        region          fluid;
+        enabled         true;
+        log             true;
+        timeStart       0;
+        timeEnd         1000;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    adjustableRunTime;
+        writeInterval   25;
+    }
+    solverInfo
+    {
+        type            solverInfo;
+        libs            ( "libutilityFunctionObjects.so" );
+        fields          ( U p_rgh );
+        writeResidualFields yes;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    adjustableRunTime;
+        writeInterval   100;
+        region          fluid;
+    }
+    strictVolumeCorrection
+    {
+        name            strictVolumeCorrection;
+        type            coded;
+        libs            ( "libutilityFunctionObjects.so" );
+        executeControl  timeStep;
+        writeControl    timeStep;
+        region          fluid;
+        codeExecute     #{
+
+            // Access mesh
+            fvMesh& meshRef = const_cast<fvMesh&>(mesh());
+
+            // Lookup alpha field (remove const)
+            volScalarField& alpha = const_cast<volScalarField&>(meshRef.lookupObject<volScalarField>("alpha.melt"));
+
+            // Compute current total melt volume
+            scalarField alphaVol = alpha.primitiveFieldRef() * meshRef.V();
+            scalar Vcurrent = gSum(alphaVol);
+            scalar actualVolFrac = Vcurrent / gSum(meshRef.V());
+
+
+            // Current simulation time
+            scalar time = meshRef.time().value();
+            
+            scalar inletVolFrac;
+            const scalar fluxMax = 0.009277514; // m3/s
+            const scalar phaseFracStart = 0.0511512; // determined by setFieldsDict, CAUTION: phaseFracStart is mesh dependent!!! when blockMesh is changed, this value changes too!
+            const scalar volumeCasting = 0.86073327987; //casting volumeCasting total
+
+            // Adjust this formula to your process = function of inlet volume fraction
+            if (time <= 1e-3)
+            {   // ramp in beginning until 1e-3, integrate(k*x+d) of inlet volume fraction
+                inletVolFrac = phaseFracStart + (fluxMax*0.9/0.001)*time*time/volumeCasting/2+0.1*fluxMax/volumeCasting*time;
+                //inletVolFrac = actualVolFrac; // no correction below t=1e-3s
+            }
+            else
+            {   // constant volume entering inlet after 1e-3: the first function is just the volume fraction from the ramp above,
+                // the second part is the constant volume MINUS what is already present from the ramp (integrating a constant is just time*constant)
+                inletVolFrac = phaseFracStart + 1e-3*fluxMax/volumeCasting*0.55 + (time-1e-3)*fluxMax/volumeCasting;
+            }
+                        
+            // Compute correction factor
+            scalar fCorr = inletVolFrac / actualVolFrac;
+            
+            if (fCorr > 1) // would mean reduction of volume, most metals shrink with cooling, so we won't correct that
+            {
+                fCorr = 1;
+                Info << "#####fCorr forced to = 1, density increasing, volume is not corrected." << endl;    
+            }
+
+            Info << "#####Volume correction: Time = " << time << "s, Volume correction factor = " << fCorr
+                 << ", actualVolFrac = " << actualVolFrac << ", inletVolFrac = " << inletVolFrac << endl;
+                 
+            // Apply correction
+            alpha.primitiveFieldRef() *= fCorr;
+
+            // Clamp alpha to [0,1]
+            forAll(alpha.primitiveFieldRef(), i)
+            {
+                if (alpha.primitiveFieldRef()[i] > 1.0) 
+                    {
+                    alpha.primitiveFieldRef()[i] = 1.0;
+                    }
+                else if (alpha.primitiveFieldRef()[i] < 0.0) 
+                    {
+                    alpha.primitiveFieldRef()[i] = 0.0;
+                    }
+            }
+
+            // Correct BCs
+            alpha.correctBoundaryConditions();
+            
+        #};
+    }
+}
+
+
+// ************************************************************************* //
