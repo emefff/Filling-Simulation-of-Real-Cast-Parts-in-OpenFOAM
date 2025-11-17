@@ -147,7 +147,13 @@ The results are within agreement of the commercial software, like mentioned befo
 
 <img width="2908" height="1400" alt="Bildschirmfoto vom 2025-11-17 14-31-26" src="https://github.com/user-attachments/assets/976b5060-a38f-4e01-a654-8a46de0d3e41" />
 
-Obviously, we reach high velocieties just before the part and also after the inlets (the inlets at the part not the inlet in the simulation). Clearly, concerns of increased erosion in these areas were mentionend. But there's no way out: the part doesn't allow for larger inlet and runner and, if I remember correctly, there was no desire to build a two cavity tool.
+Obviously, we reach high velocities just before the part and also after the inlets (the inlets at the part not the inlet in the simulation). Clearly, concerns of increased erosion in these areas were mentionend. But there's no way out: the part doesn't allow for larger inlet and runner and, if I remember correctly, there was no desire to build a two cavity tool.
+
+The simulation of this part and others will have to be repeated with the findings from the following simulation which is of a submarine propeller (sand casting). 
+
+## Sand-casting simulation of a submarine propeller
+
+The submarine propeller used here is a ficticious propeller designed by a talented engineer. The geometry was alread used in the repository showing results of a flow simulation of the very same propeller with diffuser and a ficticious subma
 
 
 
