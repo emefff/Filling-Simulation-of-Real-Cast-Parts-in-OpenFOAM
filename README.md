@@ -42,6 +42,8 @@ Te customized solver used here has the following features:
 
 -) many possibilities for material models as these are standard in OF (for example icoTabulated thermoPhysicalProperties for the liquid metal and perfectGas for the air etc., they can be combined)
 
+I don't want to leave the drawbacks unmentioned:
+
 
 
 
