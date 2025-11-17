@@ -74,10 +74,6 @@ I don't want to leave the drawbacks of this solver unmentioned:
 
 -) simulation computationally expensive compared to FD, my estimation is with the ~same mesh size and core count we need 8-10 times more computation time with VOF. In 2025 this is not really an issue because there are workstations with 32+, 64+ and even more cores available. Anyway, with the commercial licenses (and FD!) in a small company you would have 4 or 8-core licenses and a tailored CPU (6, 8 or 12 core for the mentioned licenses, because you'd need slightly more than the 4 or 8 cores for post-processing additionally) to keep CPU frequency high. And this means on this very machine you could not do any other stuff, it would be packed with tasks. Thus, if you arrive at a workstation with 36+ cores for 32 cores in OpenFOAM, your 8-10 fold advantage on commercial FD casting simulation licenses is already gone through the window because the increase with 32 (OpenFOAM) over 4 (commercial casting package) is nearly 8 fold (ok, maybe more like 6-7 fold). Granted this workstation will be a bit more expensive, but not 20000-50000€ per year, the cost of a commercial license casting package. For these expenses, you could easily buy a multi CPU server with hundreds of GB of RAM (don't forget 10 or 25GbE!), or two if refurbished. But, also here, choose your CPUs wisely and leave some spare cores for post-processing (you probably don't want to shove around hundreds of GBs or TBs of data to your your workstations, so you would do PP also on the server). 
 
-## Thixomolding simulation of a dummy part
-
-This part is just a flat plate with automatically generated runners, overflows and vents similar to the geometry presented in this repo: https://github.com/emefff/Geometry-Generation-of-Overflow-and-Venting-Systems-in-Salome-for-Die-Casting-and-Thixomolding 
-
 In a commercial package we would just import the separated .step into the software and go about our business. For use with OpenFOAM we have to:
 
 -) create our groups in the two files (fluid and solid) in Salome. The groups are: inlet, outlet, fluid_to_solid, walls_die. solid_to_fluid will later just be the copy of fluid_to_solid, because it is better to keep it exactly the same. Name them as they should appear in OpenFOAM. 
@@ -96,11 +92,28 @@ In a commercial package we would just import the separated .step into the softwa
 
 -) use checkSurfaceMesh and surfaceCheck. It is advisable not to ignore presented errors. On the other hand, it is not impossible to get a usable mesh with some errors. I have no clear answer to that. However, if you do not get ANY error, I think you'll be good to proceed in any case.
 
--) prepare the blockMeshDict anmd snappyHexMeshDict. There are many tutorials for that. First time users definitely need more time. Look for a sufficiently good and uniform castellated ONLY mesh, so deactivate layers and snapped mesh in snappyHExMeshDict. Maybe use a little overhang (larger box) in blockMesh. Start coarse in blockMeshDict and do the rest in refinementRegions and refinementSurfaces in snappyHexMeshDict. Without snapping and layering, meshing this is quite quick. For startes try to keep number of cells in the fluid around 1-2M depending on your machine. In many cases, real-world filling simulations are not better than that with commercial packages. With snappyHexMesh it is difficult to keep the number of cells low in the solid. And because the die always has a larger volume than the fluid, it will definitely need more cells than the fluid. The only option with snappy is to start very coarse with blockMeshDict and refine in snappy, but occasionally you will miss details.
+-) prepare the blockMeshDict and snappyHexMeshDict. There are many tutorials for that. First time users definitely need more time. Look for a sufficiently good and uniform castellated ONLY mesh, so deactivate layers and snapped mesh in snappyHExMeshDict. Maybe use a little overhang (larger box) in blockMesh. Choose good locationInMesh for both regions. Start coarse in blockMeshDict and do the rest in refinementRegions and refinementSurfaces in snappyHexMeshDict. Without snapping and layering, meshing this is quite quick. For starters try to keep number of cells in the fluid around 1-2M depending on your machine. In many cases, real-world filling simulations are not better than that with commercial packages. With snappyHexMesh it is difficult to keep the number of cells low in the solid. And because the die always has a larger volume than the fluid, it will definitely need more cells than the fluid. The only option with snappy is to start very coarse with blockMeshDict and refine in snappy, but occasionally you will miss details. I have thought about reducing the die to a 'wrap' around the fluid, but this is quite tricky to do with complex tools. 
 
--) If you have a running case with multiRegion, just reuse parts of this. Due to the number of parameters to look at it is very easy to make mistakes. 
+-) Determine a maximum velocity (max. inlet velocity times a factor) that will occur in your domain. You should limit the velocity in a limitFields function in the controlDict. Anyway, this will get tricky if it is in the vicinity of the speed of sound. And it will be in die-casting and Thixomolding, because this is the case in real tools. If you have a constriction somewhere in the tool of let's say one fifth of the inlet area and your max. inlet velocity is 50m/s, then you could set your limit to 250m/s. This is not a strict limit, the code introduces dampening factors in the equations that influence the result to approach 250m/s. Only if the simulation crashes, rethink the limit. If the indicated maximum velocity is larger, OF will tell you in the .log. You can also change the limit dynamically in a bash script, like it is done here (inlet velocity times factor, if you ramp up the speed in the beginning of the shot, the limit will also follow. Very convenient.)
 
--) Determine a maximum velocity (max. inlet velocity times a factor) that will occur in your domain. You should limit the velocity in a limitFields function in the controlDict. Anyway, this will get tricky if it is in the vicinity of the speed of sound. And it will be in die-casting and Thixomolding, because this is the case in real tools. If you have a constriction somewhere in the tool of let's say one fifth of the inlet area and your max. inlet velocity is 50m/s, then you could set your limit to 250m/s. This is not a strict limit, the code introduces dampening factors in the equations that influence the result to approach 250m/s. Only if the simulation crashes, rethink the limit. If the indicated maximum velocity is larger, OF will tell you in the .log. 
+-) Define U curves for the inlet. Do you need to stop the simulation automatically at a certain filling percentage? It can be done with a bash script of with a codedFunction in the controlDict. Do you need to ramp down the U field in the inlet when the pressure surpasses the limits of your machine (or: more realistically with a time delay, when the high pressure peak passed through your mnachinery at the speed of sound in your materials until it reached the inlet)? CodedFunctions can do this. 
+
+
+## Thixomolding simulation of a dummy part
+
+This part is just a flat plate with automatically generated runners, overflows and vents similar to the geometry presented in this repo: https://github.com/emefff/Geometry-Generation-of-Overflow-and-Venting-Systems-in-Salome-for-Die-Casting-and-Thixomolding 
+
+This was the first part I simulated with the customized solver, the goal was to find out if it even works and what has to be done to get a stable, 'bullet-proof' simulation with this sensitive solver. In the end, the results were quite convincing. 
+
+The codedFixedValue in the U inlet lets us ramp up the speed of the screw, just like in the real machine. We do not have a frozen plug to blow out, so we do not get the high pressure peak in the beginning. I guess this could be implemented artificially, but it is of minor interest. The U curve at the inlet is presented in the following image. It ramps up from 4.5 to 45m/s in 5ms. Velocity is reduced by 1% in a timeStep when pressureMax of 1000bar is surpassed (pressureLimiter), if pressure is below 1000bar the already applied velocity is kept. When a phaseFraction of 98% is reached, velocity U is ramped down. At 99% the simulation is stopped, this is a common value. 
+
+At t=5ms
+
+
+
+
+
+
 
 
 
