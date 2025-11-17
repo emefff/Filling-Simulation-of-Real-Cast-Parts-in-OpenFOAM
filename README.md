@@ -4,12 +4,15 @@ Filling simulations of cast parts are very common nowadays. Commercial packages 
 
 -) meshes are structured
 
--) mesh geometries are simple, mostly hex meshes are used
+-) mesh geometries are simple, mostly hex meshes are used. 
+
+-) Mesh geometries do follow the part accurately. 'Minecrafty' look of meshes
 
 -) implementations of turbulence models are somewhat questionable
 
 -) mostly wall functions are used to resolve the boundary layer region
 
+-) the package I used projects results onto the geometry. I makes the results look nicer, but does not improve results. 
 
 Due to them being commercial packages they are:
 
