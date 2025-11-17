@@ -112,10 +112,15 @@ As mentioned, inlet velocity ramps up til 5ms to 45m/s. We could also do this pa
 
 <img width="1602" height="1554" alt="Bildschirmfoto vom 2025-11-17 13-18-17" src="https://github.com/user-attachments/assets/52551d74-5bc3-4dd3-a03d-a201e0d46051" />
 
+Disregarding the pressure peak by the non-existing cold plug in this simulation, the pressure curve looks quite typical. Only very late in the filling, pressure increases to high values. It is the time when outlets are reached by the alpha.melt phase, their cross-sections are usually smaller so it is quite natural we get a higher pressure. Further increases of pressure are common when vents get filled by the metal. Usually, they feature even lower cross-sections than the outlet connecting to the overflows (see image below for reference).
+
 The affected timeSteps are documented in the log file. In the end around 9.5ms, velocity drops to very values because the phaseFraction reached 99%. Beforehand, we do not know exactly WHEN in the simulation 99% is reached. It is very likely we do not hit this point in time, or just before, with a saved result. It is therefore also convenient to decrease writeInterval in the controlDict in an automated fashion. The shared basah scxript limitULimiter does a few things: it sets the U limit in the controlDict to a prescribed value (it follows the inlet velocity), it decreases the writeInterval at 98%, it kills all processes running this solver at 99%. 
 
+Let's look at an image of the velocity in the liquid metal at 5ms, when the maximum of set inlet velocity is reached for the first time:
 
+![U_1](https://github.com/user-attachments/assets/072c8e79-3076-476e-b0e4-64146ece7df0)
 
+Granted, the mesh doesn't look perfect especially at the overflows. But what if I told you people are paying 50000€ per year + personell costs for similar results?
 
 
 
