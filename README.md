@@ -107,7 +107,12 @@ This was the first part I simulated with the customized solver, the goal was to 
 The codedFixedValue in the U inlet lets us ramp up the speed of the screw, just like in the real machine. We do not have a frozen plug to blow out, so we do not get the high pressure peak in the beginning. I guess this could be implemented artificially, but it is of minor interest. The U curve at the inlet is presented in the following image. It ramps up from 4.5 to 45m/s in 5ms. Velocity is reduced by 1% in a timeStep when pressureMax of 1000bar is surpassed (pressureLimiter), if pressure is below 1000bar the already applied velocity is kept. When a phaseFraction of 98% is reached, velocity U is ramped down. At 99% the simulation is stopped, this is a common value. 
 
 <img width="1602" height="1556" alt="Bildschirmfoto vom 2025-11-17 13-16-16" src="https://github.com/user-attachments/assets/117f6b27-9995-47d0-a9d0-37b69f6677ed" />
-As mentioned, inlet velocity ramps up til 5ms to 45m/s. We could also do this part of the curve with a standard inlet BC with tabulated values. The following part in the curve cannot be done with any of the standard BCs. 
+
+As mentioned, inlet velocity ramps up til 5ms to 45m/s. We could also do this part of the curve with a standard inlet BC with tabulated values. The following part in the curve cannot be done with any of the standard BCs. Until 7.5ms or so we find the velocity remains constant, then it drops to 32m/s and at 8.5ms it sits around 24m/s. Between these two, the pressure limiter kicked in and reduced the inlet velocity in a regulated fashion in some of the timeSteps in between. The pressure curve looks like this:
+
+<img width="1602" height="1554" alt="Bildschirmfoto vom 2025-11-17 13-18-17" src="https://github.com/user-attachments/assets/52551d74-5bc3-4dd3-a03d-a201e0d46051" />
+
+The affected timeSteps are documented in the log file. In the end around 9.5ms, velocity drops to very values because the phaseFraction reached 99%. Beforehand, we do not know exactly WHEN in the simulation 99% is reached. It is very likely we do not hit this point in time, or just before, with a saved result. It is therefore also convenient to decrease writeInterval in the controlDict in an automated fashion. The shared basah scxript limitULimiter does a few things: it sets the U limit in the controlDict to a prescribed value (it follows the inlet velocity), it decreases the writeInterval at 98%, it kills all processes running this solver at 99%. 
 
 
 
