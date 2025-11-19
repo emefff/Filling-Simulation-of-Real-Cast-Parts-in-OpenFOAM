@@ -26,7 +26,7 @@ Due to them being commercial packages they are:
 
 - restricted, per-core licenses, which directly leads to
 
-- only running well on low core count CPUs (mostly on workstations, it directly follows that you would by it especially buy it for your 4-core or 8-core license), or if it this is not the case, running on servers which are probably not the optimum for this kind of software. 
+- only running well on low core count CPUs (mostly on workstations, it directly follows that you would buy a dedicated CPU for your 4-core or 8-core license), or if it this is not the case, running on servers which are probably not the optimum for this kind of software. 
 
 - restricted regarding exporting the computed data. No, you cannot open any of these files in ParaView or VisIt.
 
