@@ -80,7 +80,7 @@ I don't want to leave the drawbacks of this solver unmentioned:
 
 - export ASCII .stls of these groups. The file names are the group names. So the inlet becomes inlet.stl and so forth.
 
-- cp fluid_to_solid.stl solid_to_fluid.stl . We need an exact copy of fluid_to_solid.stl as solid_to_fluid.stl. SnappyHexMesh needs two separate and closed regions, although this seems kind of redundant.
+- "cp fluid_to_solid.stl solid_to_fluid.stl" We need an exact copy of fluid_to_solid.stl as solid_to_fluid.stl. SnappyHexMesh needs two separate and closed regions, although this seems kind of redundant.
 
 - still, solid_to_fluid.stl has the wrong names WITHIN the .stl file. So we need to replace all occurrences of "solid fluid_to_solid" and "endsolid fluid_to_solid". Try a "head fluid_to_solid.stl" and a  "tail fluid_to_solid.stl". Execute the following command in the folder: "sed -i 's/fluid_to_solid/solid_to_fluid/g' solid_to_fluid.stl" it will replace all the occurrences of fluid_to_solid. 
 
@@ -102,11 +102,11 @@ This part is just a flat plate with automatically generated runners, overflows a
 
 This was the first part I simulated with the customized solver, the goal was to find out if it even works and what has to be done to get a stable, 'bullet-proof' simulation with this sensitive solver. In the end, the results were quite convincing. 
 
-The codedFixedValue in the U inlet lets us ramp up the speed of the screw, just like in the real machine. We do not have a frozen plug to blow out, so we do not get the high pressure peak in the beginning. I guess this could be implemented artificially, but it is of minor interest. The U curve at the inlet is presented in the following image. It ramps up from 4.5 to 45m/s in 5ms. Velocity is reduced by 1% in a timeStep when pressureMax of 1000bar is surpassed (pressureLimiter), if pressure is below 1000bar the already applied velocity is kept. When a phaseFraction of 98% is reached, velocity U is ramped down. At 99% the simulation is stopped, this is a common value. 
+The codedFixedValue in the U inlet lets us ramp up the speed of the screw, just like in the real machine. We do not have a frozen plug to blow out, so we do not get the high pressure peak in the beginning. I guess this could be implemented artificially, but it is of minor interest. The U curve at the inlet is presented in the following image. It ramps up from 4.5 to 45m/s in 5ms. Velocity is reduced by 1% in a timeStep when pressureMax of 1000bar is surpassed (pressureLimiter), if pressure is below 1000bar the already applied velocity is kept. When a phaseFraction of 98% is reached, velocity U is ramped down. At 99% the simulation is stopped this is a common value. 
 
 <img width="1602" height="1556" alt="Bildschirmfoto vom 2025-11-17 13-16-16" src="https://github.com/user-attachments/assets/117f6b27-9995-47d0-a9d0-37b69f6677ed" />
 
-As mentioned, inlet velocity ramps up til 5ms to 45m/s. We could also do this part of the curve with a standard inlet BC with tabulated values. The following part in the curve cannot be done with any of the standard BCs. Until 7.5ms or so we find the velocity remains constant, then it drops to 32m/s and at 8.5ms it sits around 24m/s. Between these two, the pressure limiter kicked in and reduced the inlet velocity in a regulated fashion in some of the timeSteps in between. The pressure curve looks like this:
+As mentioned, inlet velocity ramps up till 5ms to 45m/s. We could also do this part of the curve with a standard inlet BC with tabulated values. The following part in the curve cannot be done with any of the standard BCs. Until 7.5ms or so we find the velocity remains constant, then it drops to 32m/s and at 8.5ms it sits around 24m/s. Between these two, the pressure limiter kicked in and reduced the inlet velocity in a regulated fashion in some of the timeSteps in between. The pressure curve looks like this:
 
 <img width="1602" height="1554" alt="Bildschirmfoto vom 2025-11-17 13-18-17" src="https://github.com/user-attachments/assets/52551d74-5bc3-4dd3-a03d-a201e0d46051" />
 
@@ -130,12 +130,12 @@ Now what is this about? This step is necessary for me to check if the customized
 
 In this simulation I tried if the codedFixedValue can also be pressure regulated at the very end of the filling. That is, U is regulated in such a manner like the packing pressure does on a Thixomolding or die-casting machine (phase 1 is velocity controlled, phase 2 of filling is usually pressure controlled). Nevertheless, U can never be larger than the set maximum velocity. 
 
-The velocity profile of the real looks like this:
+The velocity profile of the real part looks like this:
 
 ![UInlet_vs_time](https://github.com/user-attachments/assets/fc161717-df84-4e92-ab21-807248ba0e72)
 
 Although the diagram reaches 14ms, the 98% limit is reached at ~10.09ms which is in reasonable agreement with the 7.5ms fill time at 45m/s considering the ramp in the beginning. So the end of this diagram is not really important because the pressure regulation just takes a long time. This is also always the question on a real machine, phase 2 can never account fully for the fill time.
-The pressure curve looks interesting because the limiter does not always seems to work, there are some overshoots above 1000bar:
+The pressure curve looks interesting because the limiter does not always seem to work, there are some overshoots above 1000bar:
 
 ![pInlet_vs_time](https://github.com/user-attachments/assets/1affa780-6b57-41d8-a6ef-ed6656f5545d)
 
