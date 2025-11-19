@@ -165,7 +165,11 @@ There you can find the following paragraph:
 
 Now, although this customized solver does not use any phaseChange, it still has to compute the boundary phase between liquid metal and air. And in my previous runs it was obvious, that the volume is not correct. 
 
-However, to counteract this numerical phenomenon, a strictVolumeCorrection in form of a codedFunction in the controlDict has been applied. Because the inflow at the inlet and the already present phase in the basin was determined by the user, we apply some simple calculus to get the volume fraction at any time (we need to perform an integration over time on the inlet U curve to get the time-dependent volumeFraction within the cavity). Quite unnecessary in retrospect, I did a ramp of the U inlet until t=1e-3s. Both files, the U BCs and the controlDict are shared, so you will understand when looking at them. 
+However, to counteract this numerical phenomenon, a strictVolumeCorrection in form of a codedFunction in the controlDict has been applied. Because the inflow at the inlet and the already present phase in the basin was determined by the user, we apply some simple calculus to get the volume fraction at any time (we need to perform an integration over time on the inlet U curve to get the time-dependent volumeFraction within the cavity). Quite unnecessary in retrospect, I did a ramp of the U inlet until t=1e-3s. Both files, the U BCs and the controlDict are shared, so you will understand when looking at them. A typical log file entry by the codedFunction would look like this:
+
+> #####Volume correction: Time = 47.41622s, Volume correction factor = 0.9999869, actualVolFrac = 0.5622349, inletVolFrac = 0.5622276
+
+The correction factor is usually very small, but due to the amount of iterations the difference between corrected and uncorrected volume is very substantial. 
 
 This simulation is still running as of today (17/11/2025), so the results presented below are from the casting approx. half-filled: 
 
