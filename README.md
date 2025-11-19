@@ -2,25 +2,25 @@
 
 Filling simulations of cast parts are very common nowadays. Commercial packages exploiting the finite difference (FD) method exist and are readily available, although at high cost. Historically to my knowledge, all of them are based on the finite difference method due to these simulations being computationally very expensive. From the method alone it directly follows:
 
--) meshes are structured
+* meshes are structured
 
--) mesh geometries are simple, mostly hex meshes are used. 
+* mesh geometries are simple, mostly hex meshes are used. 
 
--) Meshes do not follow the part accurately. 'Minecrafty' look of meshes
+* Meshes do not follow the part accurately. 'Minecrafty' look of meshes
 
--) implementations of turbulence models are somewhat questionable
+* implementations of turbulence models are somewhat questionable
 
--) mostly wall functions are used to resolve the boundary layer region
+* mostly wall functions are used to resolve the boundary layer region
 
--) the package I used projects results onto the geometry. I makes the results look nicer, but it does not improve accuracy. 
+* the package I used projects results onto the geometry. I makes the results look nicer, but it does not improve accuracy. 
 
 Due to them being commercial packages they are:
 
--) closed source
+* closed source
 
--) do they even use turbulence models? (in the case of the package I used, I am not even being informed about this as a user)
+* do they even use turbulence models? (in the case of the package I used, I am not even being informed about this as a user)
 
--) computationally very efficient and user friendly (there's your ONE advantage)
+* computationally very efficient and user friendly (there's your ONE advantage)
 
 -) VERY pricey
 
