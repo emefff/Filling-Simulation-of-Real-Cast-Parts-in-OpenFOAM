@@ -179,7 +179,8 @@ The predicted velocities are in agreement with the calculations done before. How
 
 The final results will still take some time, at least one more week. 
 
-UPDATE 12/05/2025: I finally gave up on this. The estimated fill time was ~80s for this ~7 ton casting. At around 54s weird things start to happen: U overshoots and the strictVolumeCorrection does not seem to be effective any more. Therefore, after simulating several weeks with different setups and considerable electricity cost (consumption amounts to 16kWh per day on this workstation) my verdict is: this method may be not usable for slow casting processes (all gravity casting, sand-casting etc.) at all. Perhaps the strictVolumeCorrection should be applied to the boundary zone only.
+**UPDATE 12/05/2025: 
+I finally gave up on this. The estimated fill time was ~80s for this ~7 ton casting. At around 54s weird things start to happen: U overshoots and the strictVolumeCorrection does not seem to be effective any more. Therefore, after simulating several weeks with different setups and considerable electricity cost (consumption amounts to 16kWh per day on this workstation) my verdict is: this method may be not usable for slow casting processes (all gravity casting, sand-casting etc.) at all. Perhaps the strictVolumeCorrection should be applied to the boundary zone only.
 
 emefff@gmx.at
 
