@@ -169,7 +169,7 @@ However, to counteract this numerical phenomenon, a strictVolumeCorrection in th
 
 The correction factor is usually very small, but due to the amount of iterations the difference between corrected and uncorrected volume is very substantial. 
 
-This simulation is still running as of today (17/11/2025), so the results presented below are from the casting approx. half-filled: 
+This simulation is still running as of today (11/17/2025), so the results presented below are from the casting approx. half-filled: 
 
 ![U_1](https://github.com/user-attachments/assets/b0a667e6-1d15-47de-8eb2-2bffd5814e03)
 
