@@ -30,7 +30,7 @@ Due to them being commercial packages they are:
 
 - restricted regarding exporting the computed data. No, you cannot open any of these files in ParaView or VisIt.
 
-- post-processing is restricted to the features in the package. The formulation of own computed parameters, at least in my used package, was (it probably still is) weird, cumbersome and not really straight-forward. It is often not possible to 'prove' a custom formula, e.g. for your own erosion mode because not all data is readily accessible. 
+- post-processing is restricted to the features in the package. The formulation of own computed parameters, at least in my used package, was (it probably still is) weird, cumbersome and not really straight-forward. It is often not possible to 'prove' a custom formula, e.g. for your own erosion model because not all data is readily accessible. 
 
 - at least the solver I used was not a 'real' two phase solver. It DID NOT SIMULATE the air in the cavity. 'Air' is just the volume not filled. It is therefore not a 'true two phase solver'. I did many tests regarding the air of my commercial solver, e.g. increasing filling pressure did not influence air bubble size!
 
@@ -40,7 +40,7 @@ So below I will present findings and results of using a customized solver in Ope
 
 The customized solver used here has the following features:
 
-- VOF two phase flow in fluid incompressible melt and compressible air) therefore
+- VOF two phase flow in fluid incompressible (melt and compressible air) therefore
 
 - it is multiRegion (fluid and solid)
 
